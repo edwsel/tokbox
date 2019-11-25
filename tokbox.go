@@ -22,7 +22,7 @@ import (
 	"golang.org/x/net/context"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/myesui/uuid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -104,7 +104,7 @@ func (t *Tokbox) jwtToken() (string, error) {
 			Issuer:    t.apiKey,
 			IssuedAt:  time.Now().UTC().Unix(),
 			ExpiresAt: time.Now().UTC().Unix() + (2 * 24 * 60 * 60), // 2 hours; //NB: The maximum allowed expiration time range is 5 minutes.
-			Id:        uuid.NewV4().String(),
+			Id:        uuid.New().String(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
