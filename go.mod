@@ -1,4 +1,4 @@
-module tokbox
+module ithub.com/edwsel/tokbox.v2
 
 go 1.13
 
