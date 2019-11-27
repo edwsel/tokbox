@@ -52,6 +52,14 @@ const (
 	P2P = "enabled"
 )
 
+type ArchiveMode string
+
+const (
+	ArchiveManual  ArchiveMode = "manual"
+	ArchiveAlways              = "always"
+	ArchiveDisable             = "disabled"
+)
+
 type Role string
 
 const (
@@ -114,11 +122,17 @@ func (t *Tokbox) jwtToken() (string, error) {
 // Creates a new tokbox session or returns an error.
 // See README file for full documentation: https://github.com/pjebs/tokbox
 // NOTE: ctx must be nil if *not* using Google App Engine
-func (t *Tokbox) NewSession(location string, mm MediaMode, ctx ...context.Context) (*Session, error) {
+func (t *Tokbox) NewSession(location string, mm MediaMode, archiveMode ArchiveMode, ctx ...context.Context) (*Session, error) {
 	params := url.Values{}
 
 	if len(location) > 0 {
 		params.Add("location", location)
+	}
+
+	if len(string(archiveMode)) == 0 {
+		params.Add("archiveMode", ArchiveAlways)
+	} else {
+		params.Add("archiveMode", string(archiveMode))
 	}
 
 	params.Add("p2p.preference", string(mm))
