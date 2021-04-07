@@ -2,6 +2,7 @@ package tokbox
 
 import (
 	"bytes"
+	"io/ioutil"
 
 	"net/http"
 	"net/url"
@@ -28,6 +29,7 @@ import (
 const (
 	apiHost    = "https://api.opentok.com"
 	apiSession = "/session/create"
+	apiArchive = "/v2/project/{apiKey}/archive"
 )
 
 const (
@@ -79,6 +81,23 @@ const (
 	Moderator = "moderator"
 )
 
+type LayoutType string
+
+const (
+	BestFit                LayoutType = "bestFit"
+	Custom                            = "custom"
+	HorizontalPresentation            = "horizontalPresentation"
+	Pip                               = "pip"
+	VerticalPresentation              = "verticalPresentation"
+)
+
+type OutputMode string
+
+const (
+	Composed   OutputMode = "composed"
+	Individual            = "individual"
+)
+
 type Tokbox struct {
 	apiKey        string
 	partnerSecret string
@@ -93,6 +112,12 @@ type Session struct {
 	SessionStatus  string  `json:"session_status"`
 	MediaServerURL string  `json:"media_server_url"`
 	T              *Tokbox `json:"-"`
+}
+
+type ArchiveLayout struct {
+	Type            LayoutType `json:"type"`
+	Stylesheet      string     `json:"stylesheet,omitempty"`
+	ScreenshareType string     `json:"screenshareType,omitempty"`
 }
 
 func New(apikey, partnerSecret string) *Tokbox {
@@ -182,6 +207,65 @@ func (t *Tokbox) NewSession(location string, mm MediaMode, archiveMode ArchiveMo
 	o := s[0]
 	o.T = t
 	return &o, nil
+}
+
+// Customizing the video layout for composed archives
+// See documentation: https://tokbox.com/developer/guides/archiving/layout-control.html
+func (t *Tokbox) StartArchive(sessionId string, name string, outputMode OutputMode, layout ArchiveLayout, ctx ...context.Context) error {
+	var endpoint string
+
+	if t.BetaUrl == "" {
+		endpoint = apiHost + apiArchive
+	} else {
+		endpoint = t.BetaUrl + apiArchive
+	}
+
+	endpoint = strings.ReplaceAll(endpoint, "{apiKey}", t.apiKey)
+
+	params := struct {
+		SessionId  string        `json:"sessionId"`
+		Layout     ArchiveLayout `json:"layout"`
+		Name       string        `json:"name"`
+		OutputMode OutputMode    `json:"outputMode"`
+	}{
+		SessionId:  sessionId,
+		Layout:     layout,
+		Name:       name,
+		OutputMode: outputMode,
+	}
+
+	data, err := json.Marshal(params)
+
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(data))
+
+	jwt, err := t.jwtToken()
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	if len(ctx) == 0 {
+		ctx = append(ctx, nil)
+	}
+	res, err := client(ctx[0]).Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("Tokbox returns error code: %v, response: %s", res.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 func (s *Session) Token(role Role, connectionData string, expiration int64) (string, error) {
