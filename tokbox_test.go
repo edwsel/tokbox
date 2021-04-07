@@ -12,7 +12,7 @@ const secret = "<your partner secret here>"
 
 func TestToken(t *testing.T) {
 	tokbox := New(key, secret)
-	session, err := tokbox.NewSession("", P2P)
+	session, err := tokbox.NewSession("", P2P, ArchiveManual)
 	if err != nil {
 		log.Fatal(err)
 		t.FailNow()
@@ -24,4 +24,25 @@ func TestToken(t *testing.T) {
 		t.FailNow()
 	}
 	log.Println(token)
+}
+
+func TestArchiveLayout(t *testing.T) {
+	tokbox := New(key, secret)
+
+	session, err := tokbox.NewSession("", MediaRouter, ArchiveAlways)
+	if err != nil {
+		log.Fatalf("TestArchiveLayout: %s\n", err)
+		t.FailNow()
+	}
+
+	layout := ArchiveLayout{
+		Type:       Custom,
+		Stylesheet: "stream.instructor {position: absolute; width: 100%; height: 50%;}",
+	}
+
+	err = tokbox.StartArchive(session.SessionId, "archive_name", Composed, layout)
+	if err != nil {
+		log.Fatalf("TestArchiveLayout: %s\n", err)
+		t.FailNow()
+	}
 }
