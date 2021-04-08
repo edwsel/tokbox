@@ -117,7 +117,7 @@ type Session struct {
 type ArchiveLayout struct {
 	Type            LayoutType `json:"type"`
 	Stylesheet      string     `json:"stylesheet,omitempty"`
-	ScreenshareType string     `json:"screenshareType,omitempty"`
+	ScreenshareType LayoutType `json:"screenshareType,omitempty"`
 }
 
 func New(apikey, partnerSecret string) *Tokbox {
