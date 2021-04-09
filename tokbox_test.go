@@ -29,7 +29,7 @@ func TestToken(t *testing.T) {
 func TestArchiveLayout(t *testing.T) {
 	tokbox := New(key, secret)
 
-	session, err := tokbox.NewSession("", MediaRouter, ArchiveAlways)
+	session, err := tokbox.NewSession("", MediaRouter, ArchiveManual)
 	if err != nil {
 		log.Fatalf("TestArchiveLayout: %s\n", err)
 		t.FailNow()

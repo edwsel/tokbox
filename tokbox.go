@@ -2,8 +2,6 @@ package tokbox
 
 import (
 	"bytes"
-	"io/ioutil"
-
 	"net/http"
 	"net/url"
 
@@ -261,8 +259,7 @@ func (t *Tokbox) StartArchive(sessionId string, name string, outputMode OutputMo
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		body, _ := ioutil.ReadAll(res.Body)
-		return fmt.Errorf("Tokbox returns error code: %v, response: %s", res.StatusCode, string(body))
+		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
 	}
 
 	return nil
